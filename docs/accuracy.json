@@ -1,4 +1,11 @@
 {
  "window_days": 60,
- "per_lead": []
+ "per_lead": [
+  {
+   "lead": 1,
+   "mae_ore": 37.3,
+   "coverage": 0.62,
+   "n_hours": 24
+  }
+ ]
 }
