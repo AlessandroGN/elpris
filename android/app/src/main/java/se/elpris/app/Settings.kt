@@ -18,6 +18,10 @@ data class UserSettings(
     val cheapOre: Int = 30,
     /** Notify when a forecast day averages above this (öre/kWh, as displayed). */
     val expensiveOre: Int = 150,
+    /** How many consecutive hours the cars need to charge. */
+    val chargeHours: Int = 4,
+    /** Only consider 18:00–08:00 when looking for the best charging window. */
+    val nightsOnly: Boolean = true,
 )
 
 object Settings {
@@ -26,6 +30,8 @@ object Settings {
     private val CHEAP = intPreferencesKey("cheap")
     private val EXPENSIVE = intPreferencesKey("expensive")
     private val LAST_NOTIFIED = intPreferencesKey("last_notified_epoch_day")
+    private val CHARGE_HOURS = intPreferencesKey("charge_hours")
+    private val NIGHTS_ONLY = booleanPreferencesKey("nights_only")
 
     fun flow(context: Context): Flow<UserSettings> = context.store.data.map {
         val d = UserSettings()
@@ -34,6 +40,8 @@ object Settings {
             notify = it[NOTIFY] ?: d.notify,
             cheapOre = it[CHEAP] ?: d.cheapOre,
             expensiveOre = it[EXPENSIVE] ?: d.expensiveOre,
+            chargeHours = it[CHARGE_HOURS] ?: d.chargeHours,
+            nightsOnly = it[NIGHTS_ONLY] ?: d.nightsOnly,
         )
     }
 
@@ -45,6 +53,8 @@ object Settings {
             it[NOTIFY] = s.notify
             it[CHEAP] = s.cheapOre
             it[EXPENSIVE] = s.expensiveOre
+            it[CHARGE_HOURS] = s.chargeHours
+            it[NIGHTS_ONLY] = s.nightsOnly
         }
     }
 

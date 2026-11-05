@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import se.elpris.app.ChargeWindow
+import se.elpris.app.ChargingPlanner
 import se.elpris.app.DayPrice
 import se.elpris.app.Forecast
 import se.elpris.app.UserSettings
@@ -49,6 +51,7 @@ val Fg = Color(0xFFF0EBE3)
 val Dim = Fg.copy(alpha = 0.55f)
 val Card = Color(0xFF161616)
 val Blue = Color(0xFF8FB8DE)
+val Green = Color(0xFF8FD6A2)
 
 private val sv = Locale("sv")
 
@@ -85,16 +88,26 @@ fun MainScreen(
             return@Column
         }
 
+        val best = ChargingPlanner.best(forecast, settings.chargeHours, settings.nightsOnly)
+        val bestKnown = ChargingPlanner.best(
+            forecast.copy(hours = forecast.hours.filter { it.known }), settings.chargeHours, settings.nightsOnly)
+        val perDay = ChargingPlanner.perDay(forecast, settings.chargeHours, settings.nightsOnly)
+
+        Spacer(Modifier.height(16.dp))
+        ChargeCard(forecast, best, bestKnown, settings)
         Spacer(Modifier.height(16.dp))
         TodayHeader(forecast, settings)
-        Spacer(Modifier.height(16.dp))
-        PriceChart(forecast.hours, settings)
+        Spacer(Modifier.height(8.dp))
+        PriceChart(forecast.hours, settings, highlight = best?.let { it.start to it.end })
         Row(Modifier.padding(top = 6.dp)) {
-            Legend(Fg, "Känt pris"); Spacer(Modifier.width(16.dp)); Legend(Blue, "Prognos (10–90 %)")
+            Legend(Fg, "Känt pris"); Spacer(Modifier.width(12.dp)); Legend(Blue, "Prognos")
+            Spacer(Modifier.width(12.dp)); Legend(Green, "Bäst att ladda")
         }
 
         Spacer(Modifier.height(20.dp))
-        forecast.days.forEach { DayRow(it, settings, forecast) }
+        Text("Bästa ${settings.chargeHours} h att ladda per natt", color = Fg, fontWeight = FontWeight.Medium)
+        Spacer(Modifier.height(6.dp))
+        forecast.days.forEach { DayRow(it, settings, perDay[it.date]) }
 
         forecast.drivers?.let { d ->
             Spacer(Modifier.height(20.dp))
@@ -159,23 +172,80 @@ private fun dayLabel(d: LocalDate): String {
     }
 }
 
+private val hm = DateTimeFormatter.ofPattern("HH:mm")
+
+/** "I natt", "Idag", "Natt mot lördag" etc. for the start of a charging window. */
+fun windowLabel(w: ChargeWindow): String {
+    val today = LocalDate.now()
+    val d = w.start.toLocalDate()
+    val night = w.start.hour >= 18 || w.start.hour < 8
+    return when {
+        d == today && w.start.hour >= 18 -> "I kväll"
+        d == today -> "Idag"
+        d == today.plusDays(1) && w.start.hour < 8 -> "I natt"
+        d == today.plusDays(1) -> "Imorgon"
+        night && w.start.hour < 8 -> "Natt mot " + d.dayOfWeek.getDisplayName(TextStyle.FULL, sv)
+        else -> d.dayOfWeek.getDisplayName(TextStyle.FULL, sv).replaceFirstChar { it.uppercase() } +
+            " " + d.dayOfMonth + "/" + d.monthValue
+    }
+}
+
+fun windowTime(w: ChargeWindow) = "${w.start.format(hm)}–${w.end.format(hm)}"
+
 @Composable
-private fun DayRow(d: DayPrice, s: UserSettings, f: Forecast) {
+private fun ChargeCard(f: Forecast, best: ChargeWindow?, bestKnown: ChargeWindow?, s: UserSettings) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Green.copy(alpha = 0.14f))
+        .padding(16.dp)) {
+        Text("Bäst att ladda (${s.chargeHours} h${if (s.nightsOnly) ", natt" else ""})", color = Green, fontSize = 13.sp)
+        if (best == null) {
+            Text("Ingen data för perioden", color = Fg)
+            return@Column
+        }
+        Text(windowLabel(best).replaceFirstChar { it.uppercase() } + " " + windowTime(best),
+            color = Fg, fontSize = 26.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 2.dp))
+        val saving = ChargingPlanner.savingVsAverage(f, best).shown(s).roundToInt()
+        val price = (if (best.known) "" else "~") + best.avg.shown(s).roundToInt()
+        Text("$price öre i snitt · $saving öre billigare än snittet", color = Fg, fontSize = 14.sp)
+        Text(
+            if (best.known) "Känt pris" else
+                "Prognos, troligen ${best.low.shown(s).roundToInt()}–${best.high.shown(s).roundToInt()} öre",
+            color = Dim, fontSize = 13.sp, modifier = Modifier.padding(top = 2.dp),
+        )
+        if (!best.known && bestKnown != null) {
+            HorizontalDivider(color = Dim.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+            Text("Bäst med känt pris: ${windowLabel(bestKnown)} ${windowTime(bestKnown)} · " +
+                "${bestKnown.avg.shown(s).roundToInt()} öre", color = Fg, fontSize = 14.sp)
+        }
+    }
+}
+
+@Composable
+private fun DayRow(d: DayPrice, s: UserSettings, w: ChargeWindow?) {
     if (d.date.isBefore(LocalDate.now())) return
     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp).clip(RoundedCornerShape(12.dp)).background(Card)
         .padding(horizontal = 14.dp, vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(dayLabel(d.date), color = Fg, fontSize = 16.sp, modifier = Modifier.weight(1f))
-            Text((if (d.known) "" else "~") + d.mean.shown(s).roundToInt(), color = if (d.known) Fg else Blue,
-                fontSize = 20.sp, fontWeight = FontWeight.Medium)
-            Text(" öre", color = Dim, fontSize = 13.sp)
+            Text("dygn " + (if (d.known) "" else "~") + d.mean.shown(s).roundToInt() + " öre",
+                color = Dim, fontSize = 13.sp)
         }
-        val sub = if (d.known) {
-            "${d.min.shown(s).roundToInt()}–${d.max.shown(s).roundToInt()} öre · billigast ${d.cheapestHours.joinToString(", ")}"
+        if (w != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                val day = if (w.start.toLocalDate() == d.date) "" else
+                    w.start.dayOfWeek.getDisplayName(TextStyle.SHORT, sv) + " "
+                Text("Ladda $day${windowTime(w)}", color = Green, fontSize = 18.sp, fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f))
+                Text((if (w.known) "" else "~") + w.avg.shown(s).roundToInt(), color = if (w.known) Fg else Blue,
+                    fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                Text(" öre", color = Dim, fontSize = 13.sp)
+            }
+            if (!w.known) {
+                Text("troligen ${w.low.shown(s).roundToInt()}–${w.high.shown(s).roundToInt()} öre",
+                    color = Dim, fontSize = 12.sp)
+            }
         } else {
-            "troligen ${d.low.shown(s).roundToInt()}–${d.high.shown(s).roundToInt()} · billigast runt ${d.cheapestHours.joinToString(", ")}"
+            Text("Ingen laddperiod kvar", color = Dim, fontSize = 13.sp)
         }
-        Text(sub, color = Dim, fontSize = 13.sp)
     }
 }
 
@@ -192,10 +262,16 @@ private fun SettingsCard(s: UserSettings, onChange: (UserSettings) -> Unit) {
             Switch(checked = s.notify, onCheckedChange = { onChange(s.copy(notify = it)) })
         }
         HorizontalDivider(color = Dim.copy(alpha = 0.2f))
-        Text("Billigt-notis under ${s.cheapOre} öre (snitt billigaste 3 h imorgon)", color = Dim, fontSize = 13.sp)
-        Slider(value = s.cheapOre.toFloat(), onValueChange = { onChange(s.copy(cheapOre = it.roundToInt())) },
-            valueRange = 0f..150f, steps = 29)
-        Text("Dyrt-notis över ${s.expensiveOre} öre (dagssnitt i prognos)", color = Dim, fontSize = 13.sp)
+        Text("Laddtid: ${s.chargeHours} timmar i sträck", color = Dim, fontSize = 13.sp)
+        Slider(value = s.chargeHours.toFloat(), onValueChange = { onChange(s.copy(chargeHours = it.roundToInt())) },
+            valueRange = 1f..12f, steps = 10)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Bara kväll/natt (18–08)", color = Fg, modifier = Modifier.weight(1f))
+            Switch(checked = s.nightsOnly, onCheckedChange = { onChange(s.copy(nightsOnly = it)) })
+        }
+        HorizontalDivider(color = Dim.copy(alpha = 0.2f))
+        Text("Notisen kommer varje dag när morgondagens priser är klara (efter ca 13).", color = Dim, fontSize = 12.sp)
+        Text("Varna för dyr dag över ${s.expensiveOre} öre (dagssnitt i prognos)", color = Dim, fontSize = 13.sp)
         Slider(value = s.expensiveOre.toFloat(), onValueChange = { onChange(s.copy(expensiveOre = it.roundToInt())) },
             valueRange = 50f..400f, steps = 34)
     }

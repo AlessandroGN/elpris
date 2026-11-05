@@ -12,10 +12,10 @@ android {
         applicationId = "se.elpris.app"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
         // Where the daily forecast is published (GitHub Pages).
-        buildConfigField("String", "FORECAST_URL", "\"${project.findProperty("forecastUrl") ?: "https://example.github.io/elpris/forecast.json"}\"")
+        buildConfigField("String", "FORECAST_URL", "\"${project.findProperty("forecastUrl") ?: "https://alessandrogn.github.io/elpris/forecast.json"}\"")
     }
 
     buildTypes {

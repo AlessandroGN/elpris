@@ -72,10 +72,14 @@ class PriceWidget : GlanceAppWidget() {
                     }
                 }
             }
-            days.firstOrNull { it.date == today.plusDays(1) && it.known }?.let {
+            ChargingPlanner.best(f, s.chargeHours, s.nightsOnly)?.let { w ->
                 Spacer(GlanceModifier.height(6.dp))
-                Text("Billigast imorgon ${it.cheapestHours.joinToString(", ")}",
-                    style = TextStyle(color = dim, fontSize = 11.sp))
+                Text(
+                    "Ladda: ${se.elpris.app.ui.windowLabel(w).lowercase()} ${se.elpris.app.ui.windowTime(w)} · " +
+                        (if (w.known) "" else "~") + "${w.avg.shown(s).roundToInt()} öre",
+                    style = TextStyle(color = ColorProvider(Color(0xFF8FD6A2)), fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium),
+                )
             }
         }
     }

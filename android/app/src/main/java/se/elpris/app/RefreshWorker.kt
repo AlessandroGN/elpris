@@ -57,22 +57,29 @@ suspend fun maybeNotify(context: Context, f: Forecast) {
     val tomorrow = f.days.firstOrNull { it.date == today.plusDays(1) && it.known } ?: return
     if (Settings.lastNotifiedDay(context) >= today.toEpochDay().toInt()) return
 
-    val cheapAvg = f.hours.filter { it.known && it.time.toLocalDate() == tomorrow.date }
-        .map { it.p50 }.sorted().take(3).average().shown(s)
-    val expensive = f.days.filter { !it.known && it.mean.shown(s) > s.expensiveOre }
+    if (tomorrow.date != today.plusDays(1)) return
+
+    // Daily charging tip: best window among published prices, plus a heads-up if a
+    // later (forecast) night looks clearly cheaper.
+    val known = ChargingPlanner.best(f.copy(hours = f.hours.filter { it.known }), s.chargeHours, s.nightsOnly)
+        ?: return
+    val overall = ChargingPlanner.best(f, s.chargeHours, s.nightsOnly)
+    val title = "Ladda ${se.elpris.app.ui.windowLabel(known).lowercase()} ${se.elpris.app.ui.windowTime(known)} · " +
+        "${known.avg.shown(s).roundToInt()} öre"
 
     val lines = mutableListOf<String>()
-    if (cheapAvg < s.cheapOre) {
-        lines += "Billigt i morgon: ${cheapAvg.roundToInt()} öre kl ${tomorrow.cheapestHours.joinToString(", ")}"
+    if (overall != null && !overall.known && known.avg - overall.avg > 15 / (if (s.includeVat) 1.25 else 1.0)) {
+        lines += "Ännu billigare väntas: ${se.elpris.app.ui.windowLabel(overall).lowercase()} " +
+            "${se.elpris.app.ui.windowTime(overall)} (~${overall.avg.shown(s).roundToInt()} öre)"
     }
+    val expensive = f.days.filter { !it.known && it.mean.shown(s) > s.expensiveOre }
     if (expensive.isNotEmpty()) {
         val names = expensive.joinToString(", ") {
             it.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("sv"))
         }
         lines += "Dyrt väntas: $names (~${expensive.maxOf { it.mean.shown(s) }.roundToInt()} öre)"
     }
-    if (lines.isEmpty()) return
-    send(context, lines.first(), lines.drop(1).joinToString("\n").ifEmpty { lines.first() })
+    send(context, title, lines.joinToString("\n").ifEmpty { "Billigaste ${s.chargeHours} timmarna i sträck" })
     Settings.setLastNotifiedDay(context, today.toEpochDay().toInt())
 }
 

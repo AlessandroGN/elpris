@@ -33,6 +33,9 @@ fun PriceChart(
     knownColor: Color = Color(0xFFF0EBE3),
     forecastColor: Color = Color(0xFF8FB8DE),
     gridColor: Color = Color(0x33F0EBE3),
+    /** Start (inclusive) and end (exclusive) of the hours to shade, e.g. the best charging window. */
+    highlight: Pair<OffsetDateTime, OffsetDateTime>? = null,
+    highlightColor: Color = Color(0xFF8FD6A2),
 ) {
     if (hours.isEmpty()) return
     val now = OffsetDateTime.now()
@@ -63,6 +66,19 @@ fun PriceChart(
                 drawLine(gridColor, Offset(x(i), 0f), Offset(x(i), bottom), 1f)
                 val label = h.time.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("sv"))
                 drawContext.canvas.nativeCanvas.drawText(label, x(i) + 3.dp.toPx(), size.height - 4.dp.toPx(), paint)
+            }
+        }
+        // Best charging window.
+        highlight?.let { (from, to) ->
+            val a = hours.indexOfFirst { !it.time.isBefore(from) }
+            val b = hours.indexOfLast { it.time.isBefore(to) }
+            if (a >= 0 && b >= a) {
+                val step = w / (n - 1).coerceAtLeast(1)
+                drawRect(
+                    highlightColor.copy(alpha = 0.25f),
+                    topLeft = Offset(x(a), 0f),
+                    size = androidx.compose.ui.geometry.Size(x(b) - x(a) + step, bottom),
+                )
             }
         }
         // Forecast band.
