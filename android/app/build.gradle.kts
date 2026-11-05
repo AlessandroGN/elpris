@@ -12,8 +12,8 @@ android {
         applicationId = "se.elpris.app"
         minSdk = 30
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2"
+        versionCode = 3
+        versionName = "0.3"
         // Where the daily forecast is published (GitHub Pages).
         buildConfigField("String", "FORECAST_URL", "\"${project.findProperty("forecastUrl") ?: "https://alessandrogn.github.io/elpris/forecast.json"}\"")
     }
@@ -48,6 +48,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")

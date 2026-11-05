@@ -22,6 +22,8 @@ data class UserSettings(
     val chargeHours: Int = 4,
     /** Only consider 18:00–08:00 when looking for the best charging window. */
     val nightsOnly: Boolean = true,
+    /** How many days ahead the chart shows (1, 2, 3 or 7). */
+    val chartDays: Int = 2,
 )
 
 object Settings {
@@ -32,6 +34,7 @@ object Settings {
     private val LAST_NOTIFIED = intPreferencesKey("last_notified_epoch_day")
     private val CHARGE_HOURS = intPreferencesKey("charge_hours")
     private val NIGHTS_ONLY = booleanPreferencesKey("nights_only")
+    private val CHART_DAYS = intPreferencesKey("chart_days")
 
     fun flow(context: Context): Flow<UserSettings> = context.store.data.map {
         val d = UserSettings()
@@ -42,6 +45,7 @@ object Settings {
             expensiveOre = it[EXPENSIVE] ?: d.expensiveOre,
             chargeHours = it[CHARGE_HOURS] ?: d.chargeHours,
             nightsOnly = it[NIGHTS_ONLY] ?: d.nightsOnly,
+            chartDays = it[CHART_DAYS] ?: d.chartDays,
         )
     }
 
@@ -55,6 +59,7 @@ object Settings {
             it[EXPENSIVE] = s.expensiveOre
             it[CHARGE_HOURS] = s.chargeHours
             it[NIGHTS_ONLY] = s.nightsOnly
+            it[CHART_DAYS] = s.chartDays
         }
     }
 
