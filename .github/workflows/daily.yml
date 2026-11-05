@@ -1,0 +1,51 @@
+name: daily-forecast
+
+on:
+  schedule:
+    # 12:40 and 17:10 UTC = after the day-ahead auction results (~13:00 CET).
+    - cron: "40 12 * * *"
+    - cron: "10 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecast
+  cancel-in-progress: false
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: data-${{ github.run_id }}
+          restore-keys: data-
+      - name: Fetch data
+        run: python -m backend.fetch
+      - name: Score earlier forecasts
+        run: python -m backend.evaluate
+      - name: Forecast
+        run: python -m backend.predict
+      - name: Save data cache
+        uses: actions/cache/save@v4
+        with:
+          path: data
+          key: data-${{ github.run_id }}
+      - name: Commit forecast
+        run: |
+          git config user.name "elpris-bot"
+          git config user.email "elpris-bot@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "Prognos $(date -u +%F\ %H:%M)"
+          git push
