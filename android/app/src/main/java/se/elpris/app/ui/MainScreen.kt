@@ -260,6 +260,9 @@ private fun SettingsSheet(s: UserSettings, onChange: (UserSettings) -> Unit) {
         Text("Laddtid: ${s.chargeHours} h i sträck", color = Fg)
         Slider(s.chargeHours.toFloat(), { onChange(s.copy(chargeHours = it.roundToInt())) },
             valueRange = 1f..12f, steps = 10, colors = sliderColors)
+        Text("Laddgräns i diagrammet: ${s.chargeLimitOre} öre", color = Fg)
+        Slider(s.chargeLimitOre.toFloat(), { onChange(s.copy(chargeLimitOre = (it / 10).roundToInt() * 10)) },
+            valueRange = 20f..300f, steps = 27, colors = sliderColors)
         SwitchRow("Bara kväll/natt (18–08)", s.nightsOnly, switchColors) { onChange(s.copy(nightsOnly = it)) }
         SwitchRow("Visa inkl. moms", s.includeVat, switchColors) { onChange(s.copy(includeVat = it)) }
         SwitchRow("Daglig laddnotis", s.notify, switchColors) { onChange(s.copy(notify = it)) }

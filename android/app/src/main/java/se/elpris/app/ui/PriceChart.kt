@@ -109,6 +109,19 @@ fun PriceChart(
             }
         }
 
+        // Charging limit line (e.g. 1 kr).
+        val limit = settings.chargeLimitOre.toDouble()
+        if (limit in 1.0..maxY) {
+            val ly = y(limit)
+            drawLine(Green.copy(alpha = 0.8f), Offset(left, ly), Offset(size.width, ly), 1.5.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx())))
+            val text = if (settings.chargeLimitOre % 100 == 0) "${settings.chargeLimitOre / 100} kr"
+            else "${settings.chargeLimitOre} öre"
+            val p = android.graphics.Paint(label).apply { color = Green.toArgb() }
+            val tw = p.measureText(text)
+            drawContext.canvas.nativeCanvas.drawText(text, size.width - tw - 2.dp.toPx(), ly - 4.dp.toPx(), p)
+        }
+
         // Best charging window.
         highlight?.let { (from, to) ->
             val a = hours.indexOfFirst { !it.time.isBefore(from) }

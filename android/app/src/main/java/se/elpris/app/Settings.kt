@@ -24,6 +24,8 @@ data class UserSettings(
     val nightsOnly: Boolean = true,
     /** How many days ahead the chart shows (1, 2, 3 or 7). */
     val chartDays: Int = 2,
+    /** Price below which charging is considered worth it (öre/kWh, as displayed). Drawn as a line. */
+    val chargeLimitOre: Int = 100,
 )
 
 object Settings {
@@ -35,6 +37,7 @@ object Settings {
     private val CHARGE_HOURS = intPreferencesKey("charge_hours")
     private val NIGHTS_ONLY = booleanPreferencesKey("nights_only")
     private val CHART_DAYS = intPreferencesKey("chart_days")
+    private val CHARGE_LIMIT = intPreferencesKey("charge_limit")
 
     fun flow(context: Context): Flow<UserSettings> = context.store.data.map {
         val d = UserSettings()
@@ -46,6 +49,7 @@ object Settings {
             chargeHours = it[CHARGE_HOURS] ?: d.chargeHours,
             nightsOnly = it[NIGHTS_ONLY] ?: d.nightsOnly,
             chartDays = it[CHART_DAYS] ?: d.chartDays,
+            chargeLimitOre = it[CHARGE_LIMIT] ?: d.chargeLimitOre,
         )
     }
 
@@ -60,6 +64,7 @@ object Settings {
             it[CHARGE_HOURS] = s.chargeHours
             it[NIGHTS_ONLY] = s.nightsOnly
             it[CHART_DAYS] = s.chartDays
+            it[CHARGE_LIMIT] = s.chargeLimitOre
         }
     }
 
