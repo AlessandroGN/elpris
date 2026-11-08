@@ -3,14 +3,20 @@
  "per_lead": [
   {
    "lead": 2,
-   "mae_ore": 19.5,
-   "coverage": 0.94,
-   "n_hours": 48
+   "mae_ore": 22.9,
+   "coverage": 0.9,
+   "n_hours": 72
   },
   {
    "lead": 3,
-   "mae_ore": 21.7,
-   "coverage": 0.92,
+   "mae_ore": 32.0,
+   "coverage": 0.85,
+   "n_hours": 48
+  },
+  {
+   "lead": 4,
+   "mae_ore": 45.9,
+   "coverage": 0.83,
    "n_hours": 24
   }
  ]
