@@ -2,40 +2,46 @@
  "window_days": 60,
  "per_lead": [
   {
+   "lead": 1,
+   "mae_ore": 22.8,
+   "coverage": 0.71,
+   "n_hours": 24
+  },
+  {
    "lead": 2,
-   "mae_ore": 33.4,
-   "coverage": 0.87,
-   "n_hours": 144
+   "mae_ore": 32.0,
+   "coverage": 0.84,
+   "n_hours": 168
   },
   {
    "lead": 3,
-   "mae_ore": 39.9,
+   "mae_ore": 38.3,
+   "coverage": 0.8,
+   "n_hours": 144
+  },
+  {
+   "lead": 4,
+   "mae_ore": 46.4,
    "coverage": 0.82,
    "n_hours": 120
   },
   {
-   "lead": 4,
-   "mae_ore": 49.9,
-   "coverage": 0.84,
+   "lead": 5,
+   "mae_ore": 48.4,
+   "coverage": 0.82,
    "n_hours": 96
   },
   {
-   "lead": 5,
-   "mae_ore": 55.5,
-   "coverage": 0.82,
+   "lead": 6,
+   "mae_ore": 67.8,
+   "coverage": 0.74,
    "n_hours": 72
   },
   {
-   "lead": 6,
-   "mae_ore": 82.9,
-   "coverage": 0.77,
-   "n_hours": 48
-  },
-  {
    "lead": 7,
-   "mae_ore": 38.5,
-   "coverage": 1.0,
-   "n_hours": 24
+   "mae_ore": 44.3,
+   "coverage": 0.75,
+   "n_hours": 48
   }
  ]
 }
