@@ -3,39 +3,39 @@
  "per_lead": [
   {
    "lead": 2,
-   "mae_ore": 32.0,
+   "mae_ore": 30.7,
    "coverage": 0.84,
-   "n_hours": 168
+   "n_hours": 192
   },
   {
    "lead": 3,
-   "mae_ore": 38.3,
+   "mae_ore": 36.4,
    "coverage": 0.8,
-   "n_hours": 144
+   "n_hours": 168
   },
   {
    "lead": 4,
-   "mae_ore": 46.4,
-   "coverage": 0.82,
-   "n_hours": 120
+   "mae_ore": 43.3,
+   "coverage": 0.83,
+   "n_hours": 144
   },
   {
    "lead": 5,
-   "mae_ore": 48.4,
-   "coverage": 0.82,
-   "n_hours": 96
+   "mae_ore": 43.9,
+   "coverage": 0.83,
+   "n_hours": 120
   },
   {
    "lead": 6,
-   "mae_ore": 67.8,
-   "coverage": 0.74,
-   "n_hours": 72
+   "mae_ore": 61.6,
+   "coverage": 0.64,
+   "n_hours": 96
   },
   {
    "lead": 7,
-   "mae_ore": 44.3,
-   "coverage": 0.75,
-   "n_hours": 48
+   "mae_ore": 40.7,
+   "coverage": 0.79,
+   "n_hours": 72
   }
  ]
 }
