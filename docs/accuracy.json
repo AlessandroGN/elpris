@@ -2,12 +2,6 @@
  "window_days": 60,
  "per_lead": [
   {
-   "lead": 1,
-   "mae_ore": 34.0,
-   "coverage": 0.79,
-   "n_hours": 24
-  },
-  {
    "lead": 2,
    "mae_ore": 33.2,
    "coverage": 0.78,
